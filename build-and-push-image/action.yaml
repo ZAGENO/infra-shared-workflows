@@ -5,14 +5,14 @@ inputs:
   build_context:
     description: Build context of the dockerfile
     required: false
-    default: .
+    default: "."
   build_args:
     description: Build arguments
     required: false
   dockerfile_path:
     description: Path to the dockerfile
     required: false
-    default: ./Dockerfile
+    default: "./Dockerfile"
   environment:
     description: Environment name
     required: true
