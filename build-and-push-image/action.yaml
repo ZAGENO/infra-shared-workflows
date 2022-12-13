@@ -1,0 +1,102 @@
+name: 'Build and Push Container Image'
+description: 'Builds and pushes container image to google artifact registry'
+
+inputs:
+  build_context:
+    description: Build context of the dockerfile
+    required: false
+    default: .
+  build_args:
+    description: Build arguments
+    required: false
+  dockerfile_path:
+    description: Path to the dockerfile
+    required: false
+    default: ./Dockerfile
+  environment:
+    description: Environment name
+    required: true
+  gar_host:
+    description: GCP artifactory registry host name
+    required: true
+  gar_project:
+    description: GCP artifactory registry project name
+    required: true
+  gar_repository:
+    description: GCP artifactory registry repository name
+    required: true
+  image_name:
+    description: Image name
+    required: true
+  gcp_workload_identity_provider:
+    description: GCP workload indentity provider
+    required: true
+  gcp_service_account:
+    description: GCP service account name
+    required: true
+  registry_url:
+    description: GCP registry url
+    required: true
+  tags:
+    description: Tags for the image
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - 
+      name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
+
+    -
+      name: Login to GCR
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ inputs.gar_host }}
+        username: oauth2accesstoken
+        password: ${{ steps.auth.outputs.access_token }}
+
+    - 
+      name: Get 8 digit SHA
+      shell: bash
+      id: sha8
+      run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+    -
+      name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: linux/amd64
+
+    - 
+      name: Set up Docker Context
+      shell: bash
+      run: docker context create builders
+
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      with:
+        version: latest
+        endpoint: builders
+
+    -
+      name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ inputs.build_context }}
+        file: ${{ inputs.dockerfile_path }}
+        platforms: linux/amd64
+        push: true
+        build-args: |
+          ${{ inputs.build_args }}
+        tags: |
+          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
+
