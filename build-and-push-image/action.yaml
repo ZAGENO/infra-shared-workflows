@@ -96,7 +96,4 @@ runs:
         push: true
         build-args: |
           ${{ inputs.build_args }}
-        tags: |
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
-
+        tags: ${{ inputs.image_tag }}
