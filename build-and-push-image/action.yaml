@@ -93,6 +93,7 @@ runs:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
         platforms: linux/amd64
+        provenance: false
         push: true
         build-args: |
           ${{ inputs.build_args }}
