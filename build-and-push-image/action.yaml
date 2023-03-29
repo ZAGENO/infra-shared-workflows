@@ -15,7 +15,7 @@ inputs:
     default: ./Dockerfile
   environment:
     description: Environment name
-    required: true
+    required: false
   gar_host:
     description: GCP artifactory registry host name
     required: true
