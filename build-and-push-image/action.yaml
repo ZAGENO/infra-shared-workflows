@@ -25,6 +25,9 @@ inputs:
   gar_repository:
     description: GCP artifactory registry repository name
     required: true
+  image_tag:
+    description: Image tag
+    required: false
   image_name:
     description: Image name
     required: true
@@ -88,6 +91,7 @@ runs:
 
     -
       name: Build and push
+      if: ${{ !inputs.image_tag }} 
       uses: docker/build-push-action@v3
       with:
         context: ${{ inputs.build_context }}
@@ -101,3 +105,17 @@ runs:
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
 
+    -
+      name: Build and push
+      if: ${{ inputs.image_tag }} 
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ inputs.build_context }}
+        file: ${{ inputs.dockerfile_path }}
+        platforms: linux/amd64
+        provenance: false
+        push: true
+        build-args: |
+          ${{ inputs.build_args }}
+        tags: |
+          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
