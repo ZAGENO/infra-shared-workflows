@@ -105,8 +105,8 @@ runs:
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
         labels: |
-          org.opencontainers.image.revision=$GITHUB_SHA
-          org.opencontainers.image.source=github.com/$GITHUB_REPOSITORY
+          org.opencontainers.image.revision=${GITHUB_SHA}
+          org.opencontainers.image.source=github.com/${GITHUB_REPOSITORY}
 
     -
       name: Build and push
@@ -123,5 +123,5 @@ runs:
         tags: |
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
         labels: |
-          org.opencontainers.image.revision=$GITHUB_SHA
-          org.opencontainers.image.source=github.com/$GITHUB_REPOSITORY
+          org.opencontainers.image.revision=${GITHUB_SHA}
+          org.opencontainers.image.source=github.com/${GITHUB_REPOSITORY}
