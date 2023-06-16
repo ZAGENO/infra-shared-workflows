@@ -71,6 +71,18 @@ runs:
       id: sha8
       run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
 
+    - 
+      name: Get full SHA
+      shell: bash
+      id: sha
+      run: echo "sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Get repository
+      shell: bash
+      id: repo
+      run: echo "repo=${GITHUB_REPOSITORY}" >> $GITHUB_OUTPUT
+    
     -
       name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -105,8 +117,8 @@ runs:
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
         labels: |
-          org.opencontainers.image.revision=${GITHUB_SHA}
-          org.opencontainers.image.source=github.com/${GITHUB_REPOSITORY}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.source=github.com/${{ github.repository }}
 
     -
       name: Build and push
@@ -123,5 +135,5 @@ runs:
         tags: |
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
         labels: |
-          org.opencontainers.image.revision=${GITHUB_SHA}
-          org.opencontainers.image.source=github.com/${GITHUB_REPOSITORY}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.source=github.com/${{ github.repository }}
