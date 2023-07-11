@@ -1,0 +1,67 @@
+name: 'Build and Push Python Package'
+description: 'Builds and pushes python package to nexus'
+
+inputs:
+  package_name:
+    description: Name of the python package to build
+    required: true
+  nexus_repository:
+    description: Repository name in nexus where the package will be pushed
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+
+    - 
+      name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - 
+      name: Install and configure Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.2.2
+        installer-parallel: false
+
+    - 
+      name: Install
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: poetry install
+
+    - 
+      name: Bump version
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: |
+        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
+        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
+        if [[ "$VERSION_PART" == "patch" ]]; then
+          poetry version patch
+        elif [[ "$VERSION_PART" == "minor" ]]; then
+          poetry version minor
+        elif [[ "$VERSION_PART" == "major" ]]; then
+          poetry version major
+        else
+          echo "Invalid version part specified in the commit message. Bumping patch version!"
+          poetry version patch
+        fi
+
+    - 
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Bump python version
+        commit_options: '--no-verify --signoff'
+        file_pattern: ${{ inputs.package_name }}/pyproject.toml
+
+    - 
+      name: Poetry upload to Nexus
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: |
+        poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
+        poetry publish --build --repository nexus-local --username ${{ secrets.NEXUS_USERNAME }} --password ${{ secrets.NEXUS_PASSWORD }}
