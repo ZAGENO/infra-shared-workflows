@@ -8,6 +8,12 @@ inputs:
   nexus_repository:
     description: Repository name in nexus where the package will be pushed
     required: true
+  nexus_username:
+    description: Username for nexus
+    required: true
+  nexus_password:
+    description: Password for nexus
+    required: true
 
 runs:
   using: "composite"
@@ -64,4 +70,4 @@ runs:
       working-directory: ${{ inputs.package_name }}
       run: |
         poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
-        poetry publish --build --repository nexus-local --username ${{ secrets.NEXUS_USERNAME }} --password ${{ secrets.NEXUS_PASSWORD }}
+        poetry publish --build --repository nexus-local --username ${{ inputs.nexus_username }} --password ${{ inputs.nexus_password }}
