@@ -40,6 +40,8 @@ runs:
       run: poetry install
 
     - uses: actions/setup-node@v3
+      with:
+        node-version: 'latest'
 
     - name: Semantic Release
       id: semantic
