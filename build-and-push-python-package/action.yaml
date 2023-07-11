@@ -41,9 +41,9 @@ runs:
 
     - name: Semantic Release
       id: semantic
-      working-directory: ${{ inputs.package_name }}
       uses: cycjimmy/semantic-release-action@v3
       with:
+        working_directory: ${{ inputs.package_name }}
         extra_plugins: |
           @semantic-release/exec
           @semantic-release/git
