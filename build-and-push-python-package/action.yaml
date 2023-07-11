@@ -39,6 +39,8 @@ runs:
       working-directory: ${{ inputs.package_name }}
       run: poetry install
 
+    - uses: actions/setup-node@v3
+
     - name: Semantic Release
       id: semantic
       uses: cycjimmy/semantic-release-action@v3
@@ -73,10 +75,10 @@ runs:
     #     commit_options: '--no-verify --signoff'
     #     file_pattern: ${{ inputs.package_name }}/pyproject.toml
 
-    - 
-      name: Poetry upload to Nexus
-      shell: bash
-      working-directory: ${{ inputs.package_name }}
-      run: |
-        poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
-        poetry publish --build --repository nexus-local --username ${{ inputs.nexus_username }} --password ${{ inputs.nexus_password }}
+    # - 
+    #   name: Poetry upload to Nexus
+    #   shell: bash
+    #   working-directory: ${{ inputs.package_name }}
+    #   run: |
+    #     poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
+    #     poetry publish --build --repository nexus-local --username ${{ inputs.nexus_username }} --password ${{ inputs.nexus_password }}
