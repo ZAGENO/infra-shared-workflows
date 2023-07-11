@@ -39,30 +39,39 @@ runs:
       working-directory: ${{ inputs.package_name }}
       run: poetry install
 
-    - 
-      name: Bump version
-      shell: bash
+    - name: Semantic Release
+      id: semantic
       working-directory: ${{ inputs.package_name }}
-      run: |
-        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
-        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
-        if [[ "$VERSION_PART" == "patch" ]]; then
-          poetry version patch
-        elif [[ "$VERSION_PART" == "minor" ]]; then
-          poetry version minor
-        elif [[ "$VERSION_PART" == "major" ]]; then
-          poetry version major
-        else
-          echo "Invalid version part specified in the commit message. Bumping patch version!"
-          poetry version patch
-        fi
-
-    - 
-      uses: stefanzweifel/git-auto-commit-action@v4
+      uses: cycjimmy/semantic-release-action@v3
       with:
-        commit_message: Bump python version
-        commit_options: '--no-verify --signoff'
-        file_pattern: ${{ inputs.package_name }}/pyproject.toml
+        extra_plugins: |
+          @semantic-release/exec
+          @semantic-release/git
+
+    # - 
+    #   name: Bump version
+    #   shell: bash
+    #   working-directory: ${{ inputs.package_name }}
+    #   run: |
+    #     COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
+    #     VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
+    #     if [[ "$VERSION_PART" == "patch" ]]; then
+    #       poetry version patch
+    #     elif [[ "$VERSION_PART" == "minor" ]]; then
+    #       poetry version minor
+    #     elif [[ "$VERSION_PART" == "major" ]]; then
+    #       poetry version major
+    #     else
+    #       echo "Invalid version part specified in the commit message. Bumping patch version!"
+    #       poetry version patch
+    #     fi
+
+    # - 
+    #   uses: stefanzweifel/git-auto-commit-action@v4
+    #   with:
+    #     commit_message: Bump python version
+    #     commit_options: '--no-verify --signoff'
+    #     file_pattern: ${{ inputs.package_name }}/pyproject.toml
 
     - 
       name: Poetry upload to Nexus
