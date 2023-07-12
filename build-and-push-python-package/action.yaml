@@ -58,7 +58,7 @@ runs:
         elif [[ "$VERSION_PART" == "major" ]]; then
           poetry version major
         else
-          echo "Invalid version part specified in the commit message. Update the version by adding version change commit."
+          echo "Invalid version part specified in the commit message. Add patch:, minor: or major: to beginning of the commit message!"
           exit 1
         fi
 
