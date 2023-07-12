@@ -107,8 +107,8 @@ runs:
       shell: bash
       working-directory: ${{ inputs.package_name }}
       run: |
-        VERSION_PART=${{ steps.version_part.outputs.version_part }}
-        
+        VERSION_PART=$(echo ${{ steps.version_part.outputs.version_part }} | cut -d':' -f1)
+
         if [[ "$VERSION_PART" == "patch" ]]; then
           poetry version patch
         elif [[ "$VERSION_PART" == "minor" ]]; then
