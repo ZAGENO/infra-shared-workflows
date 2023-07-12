@@ -60,16 +60,18 @@ runs:
 
     - 
       name: Get main branch version
-      shell: bash
+      if: github.event_name == 'pull_request'
       id: main_version
+      shell: bash
       run: |
         MAIN_VERSION=$(git show main:${{ inputs.package_name }}/pyproject.toml | awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }')
         echo "main_version=${MAIN_VERSION}" >> $GITHUB_OUTPUT
 
     - 
       name: Get pull request version
-      shell: bash
+      if: github.event_name == 'pull_request'
       id: pull_request_version
+      shell: bash
       working-directory: ${{ inputs.package_name }}
       run: |
         PULL_REQUEST_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' pyproject.toml)
@@ -77,8 +79,9 @@ runs:
 
     - 
       name: Compare versions
-      shell: bash
+      if: github.event_name == 'pull_request'
       id: compare_versions
+      shell: bash
       run: |
         MAIN_VERSION=${{ steps.main_version.outputs.main_version }}
         PULL_REQUEST_VERSION=${{ steps.pull_request_version.outputs.pull_request_version }}
