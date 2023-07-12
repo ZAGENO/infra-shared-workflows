@@ -43,44 +43,38 @@ runs:
       with:
         node-version: 'latest'
 
-    - name: Semantic Release
-      id: semantic
-      uses: cycjimmy/semantic-release-action@v3
+    - 
+      name: Bump version
+      if: github.event_name == 'pull_request'
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: |
+        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
+        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
+        if [[ "$VERSION_PART" == "patch" ]]; then
+          poetry version patch
+        elif [[ "$VERSION_PART" == "minor" ]]; then
+          poetry version minor
+        elif [[ "$VERSION_PART" == "major" ]]; then
+          poetry version major
+        else
+          echo "Invalid version part specified in the commit message. Update the version by adding version change commit."
+          exit 1
+        fi
+
+    - 
+      uses: stefanzweifel/git-auto-commit-action@v4
+      if: github.event_name == 'pull_request'
       with:
-        working_directory: ${{ inputs.package_name }}
-        extra_plugins: |
-          @semantic-release/exec
-          @semantic-release/git
+        commit_message: Bump python version
+        commit_options: '--no-verify --signoff'
+        file_pattern: ${{ inputs.package_name }}/pyproject.toml
 
-    # - 
-    #   name: Bump version
-    #   shell: bash
-    #   working-directory: ${{ inputs.package_name }}
-    #   run: |
-    #     COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
-    #     VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
-    #     if [[ "$VERSION_PART" == "patch" ]]; then
-    #       poetry version patch
-    #     elif [[ "$VERSION_PART" == "minor" ]]; then
-    #       poetry version minor
-    #     elif [[ "$VERSION_PART" == "major" ]]; then
-    #       poetry version major
-    #     else
-    #       echo "Invalid version part specified in the commit message. Bumping patch version!"
-    #       poetry version patch
-    #     fi
-
-    # - 
-    #   uses: stefanzweifel/git-auto-commit-action@v4
-    #   with:
-    #     commit_message: Bump python version
-    #     commit_options: '--no-verify --signoff'
-    #     file_pattern: ${{ inputs.package_name }}/pyproject.toml
-
-    # - 
-    #   name: Poetry upload to Nexus
-    #   shell: bash
-    #   working-directory: ${{ inputs.package_name }}
-    #   run: |
-    #     poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
-    #     poetry publish --build --repository nexus-local --username ${{ inputs.nexus_username }} --password ${{ inputs.nexus_password }}
+    - 
+      name: Poetry upload to Nexus
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: |
+        poetry config repositories.nexus-local https://nexus.zageno.com/repository/${{ inputs.nexus_repository }}/
+        poetry publish --build --repository nexus-local --username ${{ inputs.nexus_username }} --password ${{ inputs.nexus_password }}
