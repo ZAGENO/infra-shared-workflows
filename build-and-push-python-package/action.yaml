@@ -63,13 +63,14 @@ runs:
       shell: bash
       id: main_version
       run: |
-        MAIN_VERSION=$(git show main:pyproject.toml | awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }')
+        MAIN_VERSION=$(git show main:${{ inputs.package_name }}/pyproject.toml | awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }')
         echo "main_version=${MAIN_VERSION}" >> $GITHUB_OUTPUT
 
     - 
       name: Get pull request version
       shell: bash
       id: pull_request_version
+      working-directory: ${{ inputs.package_name }}
       run: |
         PULL_REQUEST_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' pyproject.toml)
         echo "pull_request_version=${PULL_REQUEST_VERSION}" >> $GITHUB_OUTPUT
@@ -84,8 +85,10 @@ runs:
 
         if [[ "$MAIN_VERSION" == "$PULL_REQUEST_VERSION" ]]; then
           echo "versions_match=true" >> $GITHUB_OUTPUT
+          echo "Bumping version!"
         else
           echo "versions_match=false" >> $GITHUB_OUTPUT
+          echo "Version already bumped."
         fi
     
     - 
