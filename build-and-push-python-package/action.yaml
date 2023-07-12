@@ -26,6 +26,13 @@ runs:
         fetch-depth: 0
 
     - 
+      name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        ref: main
+        path: main
+
+    - 
       name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -49,13 +56,59 @@ runs:
         node-version: 'latest'
 
     - 
-      name: Bump version
+      name: Determine version part
       if: github.event_name == 'pull_request'
+      id: version_part
+      shell: bash
+      run: |
+        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha }})
+        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d' ' -f1)
+        echo "version_part=${VERSION_PART}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Get main branch version
+      if: github.event_name == 'pull_request'
+      id: main_version
+      shell: bash
+      run: |
+        MAIN_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' main/${{ inputs.package_name }}/pyproject.toml)
+        echo "main_version=${MAIN_VERSION}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Get pull request version
+      if: github.event_name == 'pull_request'
+      id: pull_request_version
       shell: bash
       working-directory: ${{ inputs.package_name }}
       run: |
-        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha }})
-        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
+        PULL_REQUEST_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' pyproject.toml)
+        echo "pull_request_version=${PULL_REQUEST_VERSION}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Compare versions
+      if: github.event_name == 'pull_request'
+      id: compare_versions
+      shell: bash
+      run: |
+        MAIN_VERSION=${{ steps.main_version.outputs.main_version }}
+        PULL_REQUEST_VERSION=${{ steps.pull_request_version.outputs.pull_request_version }}
+
+        if [[ "$MAIN_VERSION" == "$PULL_REQUEST_VERSION" ]]; then
+          echo "versions_match=true" >> $GITHUB_OUTPUT
+          echo "Bumping version!"
+        else
+          echo "versions_match=false" >> $GITHUB_OUTPUT
+          echo "Version already bumped."
+        fi
+    
+    - 
+      name: Bump version
+      if: ${{ github.event_name == 'pull_request' && steps.compare_versions.outputs.versions_match == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.package_name }}
+      run: |
+        VERSION_PART=$(echo ${{ steps.version_part.outputs.version_part }} | cut -d':' -f1)
+
         if [[ "$VERSION_PART" == "patch" ]]; then
           poetry version patch
         elif [[ "$VERSION_PART" == "minor" ]]; then
@@ -69,7 +122,7 @@ runs:
 
     - 
       uses: stefanzweifel/git-auto-commit-action@v4
-      if: github.event_name == 'pull_request'
+      if: ${{ github.event_name == 'pull_request' && steps.compare_versions.outputs.versions_match == 'true' }}
       with:
         commit_message: Bump python version
         commit_options: '--no-verify --signoff'
