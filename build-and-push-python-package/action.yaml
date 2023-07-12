@@ -26,6 +26,13 @@ runs:
         fetch-depth: 0
 
     - 
+      name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        ref: main
+        path: main
+
+    - 
       name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -64,7 +71,7 @@ runs:
       id: main_version
       shell: bash
       run: |
-        MAIN_VERSION=$(git show main:${{ inputs.package_name }}/pyproject.toml | awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }')
+        MAIN_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' main/${{ inputs.package_name }}/pyproject.toml)
         echo "main_version=${MAIN_VERSION}" >> $GITHUB_OUTPUT
 
     - 
