@@ -49,12 +49,51 @@ runs:
         node-version: 'latest'
 
     - 
-      name: Bump version
+      name: Determine version part
       if: github.event_name == 'pull_request'
+      id: version_part
+      shell: bash
+      run: |
+        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha }})
+        VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d' ' -f1)
+        echo "version_part=${VERSION_PART}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Get main branch version
+      shell: bash
+      id: main_version
+      run: |
+        MAIN_VERSION=$(git show main:pyproject.toml | awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }')
+        echo "main_version=${MAIN_VERSION}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Get pull request version
+      shell: bash
+      id: pull_request_version
+      run: |
+        PULL_REQUEST_VERSION=$(awk -F ' = ' '/^version = /{ gsub(/"/, "", $2); print $2; exit }' pyproject.toml)
+        echo "pull_request_version=${PULL_REQUEST_VERSION}" >> $GITHUB_OUTPUT
+
+    - 
+      name: Compare versions
+      shell: bash
+      id: compare_versions
+      run: |
+        MAIN_VERSION=${{ steps.main_version.outputs.main_version }}
+        PULL_REQUEST_VERSION=${{ steps.pull_request_version.outputs.pull_request_version }}
+
+        if [[ "$MAIN_VERSION" == "$PULL_REQUEST_VERSION" ]]; then
+          echo "versions_match=true" >> $GITHUB_OUTPUT
+        else
+          echo "versions_match=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - 
+      name: Bump version
+      if: ${{ github.event_name == 'pull_request' && steps.compare_versions.outputs.versions_match == 'true' }}
       shell: bash
       working-directory: ${{ inputs.package_name }}
       run: |
-        COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.pull_request.head.sha }})
         VERSION_PART=$(echo $COMMIT_MESSAGE | cut -d':' -f1)
         if [[ "$VERSION_PART" == "patch" ]]; then
           poetry version patch
@@ -69,7 +108,7 @@ runs:
 
     - 
       uses: stefanzweifel/git-auto-commit-action@v4
-      if: github.event_name == 'pull_request'
+      if: ${{ github.event_name == 'pull_request' && steps.compare_versions.outputs.versions_match == 'true' }}
       with:
         commit_message: Bump python version
         commit_options: '--no-verify --signoff'
