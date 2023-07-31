@@ -67,13 +67,12 @@ runs:
 
     - 
       name: Get branch name
-      id: branch_name
       if: ${{ !inputs.image_tag && !inputs.environment }}
       run: |
         if [ -n "${GITHUB_HEAD_REF}" ]; then
-          echo "branch_name=${GITHUB_HEAD_REF}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
         else
-          echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
         fi
       shell: bash
 
@@ -103,7 +102,7 @@ runs:
 
     -
       name: Build and push
-      if: ${{ !inputs.image_tag }} 
+      if: ${{ !inputs.image_tag && inputs.environment }}
       uses: docker/build-push-action@v3
       with:
         context: ${{ inputs.build_context }}
@@ -151,4 +150,4 @@ runs:
         build-args: |
           ${{ inputs.build_args }}
         tags: |
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ steps.branch_name.outputs.branch_name }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:$BRANCH_NAME.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
