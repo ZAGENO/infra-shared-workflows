@@ -66,6 +66,18 @@ runs:
         password: ${{ steps.auth.outputs.access_token }}
 
     - 
+      name: Get branch name
+      if: ${{ github.event_name == 'push' && !inputs.image_tag && !inputs.environment }}
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+      shell: bash
+
+    - 
+      name: Get branch name
+      if: ${{ github.event_name == 'pull_request' && !inputs.image_tag && !inputs.environment }}
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+      shell: bash
+
+    - 
       name: Get 8 digit SHA
       shell: bash
       id: sha8
@@ -125,3 +137,18 @@ runs:
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
+
+    -
+      name: Build and push
+      if: ${{ !inputs.image_tag && !inputs.environment }}
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ inputs.build_context }}
+        file: ${{ inputs.dockerfile_path }}
+        platforms: linux/amd64
+        provenance: false
+        push: true
+        build-args: |
+          ${{ inputs.build_args }}
+        tags: |
+          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
