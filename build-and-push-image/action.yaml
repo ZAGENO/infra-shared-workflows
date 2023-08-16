@@ -118,6 +118,8 @@ runs:
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     -
       name: Build and push
