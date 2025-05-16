@@ -16,13 +16,13 @@ runs:
       run: |
         if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
           echo "ENV=production" >> $GITHUB_ENV
-          echo "IMAGE_TAG=production-${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=production" >> $GITHUB_ENV
         elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
           echo "ENV=staging" >> $GITHUB_ENV
-          echo "IMAGE_TAG=staging-${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=staging" >> $GITHUB_ENV
         else
           echo "ENV=development" >> $GITHUB_ENV
-          echo "IMAGE_TAG=dev-${{ github.run_number }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=development" >> $GITHUB_ENV
         fi
       shell: bash
 
@@ -55,7 +55,7 @@ runs:
         context: .
         push: true
         tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.sha8.outputs.sha8 }}-${{ env.IMAGE_TAG }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}-${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         provenance: false  
