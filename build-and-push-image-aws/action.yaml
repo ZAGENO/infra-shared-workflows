@@ -24,6 +24,12 @@ runs:
     - name: Set ECR_REPOSITORY from GITHUB_REPOSITORY
       run: echo "ECR_REPOSITORY=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
       shell: bash
+
+    - 
+      name: Get 8 digit SHA
+      shell: bash
+      id: sha8
+      run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4.1.0
@@ -41,7 +47,7 @@ runs:
         context: .
         push: true
         tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.sha8.outputs.sha8 }-${{ env.IMAGE_TAG }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         provenance: false  
