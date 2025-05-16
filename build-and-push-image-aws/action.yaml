@@ -1,0 +1,49 @@
+name: CI Pipeline - Build and Push Docker Image AWS
+description: 'Builds and pushes container image to aws artifact registry'
+
+
+runs:
+  using: "composite"
+  steps:
+    - 
+      name: Set environment
+      id: set-env
+      run: |
+        if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+          echo "ENV=production" >> $GITHUB_ENV
+          echo "IMAGE_TAG=production-${{ github.run_number }}" >> $GITHUB_ENV
+        elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+          echo "ENV=staging" >> $GITHUB_ENV
+          echo "IMAGE_TAG=staging-${{ github.run_number }}" >> $GITHUB_ENV
+        else
+          echo "ENV=development" >> $GITHUB_ENV
+          echo "IMAGE_TAG=dev-${{ github.run_number }}" >> $GITHUB_ENV
+        fi
+      shell: bash
+
+    - name: Set ECR_REPOSITORY from GITHUB_REPOSITORY
+      run: echo "ECR_REPOSITORY=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+      shell: bash
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4.1.0
+      with:  
+        role-to-assume: arn:aws:iam::191227657176:role/test
+        aws-region: ${{ env.AWS_REGION }} 
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1 
+    
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        provenance: false  
+
+        
