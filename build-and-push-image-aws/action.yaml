@@ -6,6 +6,10 @@ inputs:
     description: region of aws
     required: false
     default: us-east-1
+  role-to-assume:
+    description: IAM role ARN to assume
+    required: false
+    default: arn:aws:iam::205930631617:role/GithubControllerIAMPolicy
 
 runs:
   using: "composite"
