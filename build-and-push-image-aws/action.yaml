@@ -2,7 +2,7 @@ name: CI Pipeline - Build and Push Docker Image AWS
 description: 'Builds and pushes container image to aws artifact registry'
 
 inputs:
-  AWS_REGION:
+  aws-region: 
     description: region of aws
     required: false
     default: us-east-1
@@ -40,8 +40,8 @@ runs:
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:  
         role-to-assume: arn:aws:iam::205930631617:role/GithubControllerIAMPolicy
-        aws-region: ${{ env.AWS_REGION }} 
-    
+        aws-region: ${{ inputs.aws-region }}
+        
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1 
