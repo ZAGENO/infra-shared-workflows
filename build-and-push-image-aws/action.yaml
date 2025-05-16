@@ -1,6 +1,11 @@
 name: CI Pipeline - Build and Push Docker Image AWS
 description: 'Builds and pushes container image to aws artifact registry'
 
+inputs:
+  AWS_REGION:
+    description: region of aws
+    required: false
+    default: us-east-1
 
 runs:
   using: "composite"
