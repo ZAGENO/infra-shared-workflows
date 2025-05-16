@@ -35,13 +35,16 @@ runs:
       shell: bash
       id: sha8
       run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:  
         role-to-assume: arn:aws:iam::205930631617:role/GithubControllerIAMPolicy
         aws-region: ${{ inputs.aws-region }}
-        
+
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1 
