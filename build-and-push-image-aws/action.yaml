@@ -104,8 +104,8 @@ runs:
         build-args: |
           ${{ inputs.build_args }}
         tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr_repository }}/${{ inputs.image_name }}:latest
+          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:latest
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
@@ -125,7 +125,7 @@ runs:
         build-args: |
           ${{ inputs.build_args }}
         tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
@@ -145,7 +145,7 @@ runs:
         build-args: |
           ${{ inputs.build_args }}
         tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
