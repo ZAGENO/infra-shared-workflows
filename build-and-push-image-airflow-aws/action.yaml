@@ -1,0 +1,75 @@
+name: CI Pipeline - Build and Push Docker Image Airflow AWS
+description: 'Builds and pushes container image Airflow to aws artifact registry'
+
+inputs:
+  aws-region: 
+    description: region of aws
+    required: false
+    default: us-east-1
+  role-to-assume:
+    description: IAM role ARN to assume
+    required: false
+    default: arn:aws:iam::205930631617:role/GithubControllerIAMPolicy
+  REQUIREMENTS_FILE:
+    description: requirements file for install package
+    required: true
+  
+
+runs:
+  using: "composite"
+  steps:
+    - 
+      name: Set environment
+      id: set-env
+      run: |
+        if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+          echo "ENV=production" >> $GITHUB_ENV
+          echo "IMAGE_TAG=production" >> $GITHUB_ENV
+        elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+          echo "ENV=staging" >> $GITHUB_ENV
+          echo "IMAGE_TAG=staging" >> $GITHUB_ENV
+        else
+          echo "ENV=development" >> $GITHUB_ENV
+          echo "IMAGE_TAG=development" >> $GITHUB_ENV
+        fi
+      shell: bash
+
+    - name: Set ECR_REPOSITORY from GITHUB_REPOSITORY
+      run: echo "ECR_REPOSITORY=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+      shell: bash
+
+    - 
+      name: Get 8 digit SHA
+      shell: bash
+      id: sha8
+      run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4.1.0
+      with:  
+        role-to-assume: arn:aws:iam::205930631617:role/GithubControllerIAMPolicy
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1 
+    
+    - name: Build and Push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ${{ matrix.config.dockerfile }}
+        push: true
+        tags: |
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ matrix.config.tag_suffix }}-${{ github.event.number }}
+        build-args: |
+          REQUIREMENTS_FILE=${{ inputs.REQUIREMENTS_FILE }}
+          GIT_COMMIT=${{ github.sha }}
+          PR_NUMBER=${{ github.event.number }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+        
