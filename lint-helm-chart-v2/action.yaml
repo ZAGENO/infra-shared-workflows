@@ -32,10 +32,16 @@ runs:
         fi
         ct lint --target-branch "$TARGET_BRANCH"
 
+    - name: Validate all values files against schema
+      uses: cardinalby/schema-validator-action@v3
+      with:
+        file: charts/*/values*.yaml
+        schema: ${{ github.action_path }}/zageno_helm.schema.json 
+
     - name: Install Python dependencies for policy enforcement
       shell: bash
       run: pip install pyyaml
 
     - name: Enforce org policy
       shell: bash
-      run: python3 lint-helm-chart-v2/allow-actions.py 
+      run: python3 "${{ github.action_path }}/allow-actions.py"
