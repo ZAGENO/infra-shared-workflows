@@ -98,10 +98,29 @@ def check_forbidden_resources():
                     continue
     return violations
 
+def check_postgres_dbm_enabled_in_chart_values():
+    violations = []
+    for path in glob.glob("charts/*/values*.yaml"):
+        try:
+            with open(path) as f:
+                data = yaml.safe_load(f)
+                # Traverse to postgres.dbm.enabled
+                postgres = data.get("postgres") if isinstance(data, dict) else None
+                if postgres and isinstance(postgres, dict):
+                    dbm = postgres.get("dbm")
+                    if dbm and isinstance(dbm, dict):
+                        enabled = dbm.get("enabled")
+                        if enabled is True:
+                            violations.append(f"'postgres.dbm.enabled' is true in {path}")
+        except Exception as e:
+            continue
+    return violations
+
 if __name__ == "__main__":
     all_violations = []
     all_violations.extend(check_allowed_actions())
     all_violations.extend(check_forbidden_resources())
+    all_violations.extend(check_postgres_dbm_enabled_in_chart_values())
     handle_violations(all_violations)
     print(f"✅ All actions used are in the allow-list: {', '.join(ALLOWED)}")
     print("✅ No 'resources' section found in any file.") 

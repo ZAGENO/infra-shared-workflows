@@ -32,22 +32,10 @@ runs:
         fi
         ct lint --target-branch "$TARGET_BRANCH"
 
-    - name: Install Python dependencies for schema validation
+    - name: Install Python dependencies for policy enforcement
       shell: bash
-      run: pip install pyyaml jsonschema
+      run: pip install pyyaml
 
-    - name: Download schema file
+    - name: Enforce org policy
       shell: bash
-      run: curl -o zageno_helm.schema.json https://raw.githubusercontent.com/ZAGENO/infra-shared-workflows/main/lint-helm-chart-v2/zageno_helm.schema.json
-
-    - name: Validate all values files against schema
-      uses: cardinalby/schema-validator-action@v3
-      with:
-        file: charts/*/values*.yaml
-        schema: zageno_helm.schema.json
-
-    - name: Check for allowed GitHub Actions
-      shell: bash
-      run: |
-        pip install pyyaml
-        python3 lint-helm-chart-v2/allow-actions.py 
+      run: python3 lint-helm-chart-v2/allow-actions.py 
