@@ -39,7 +39,7 @@ runs:
     - name: Validate values.yaml against schema
       uses: cardinalby/schema-validator-action@v3
       with:
-        file: values*.yaml
+        file: charts/*/values*.yaml
         schema: lint-helm-chart-v2/zageno_helm.schema.json
 
     - name: Check for allowed GitHub Actions
