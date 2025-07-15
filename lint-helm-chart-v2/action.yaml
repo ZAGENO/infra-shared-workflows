@@ -31,16 +31,11 @@ runs:
       shell: bash
       run: pip install pyyaml jsonschema
 
-    - name: Validate values.yaml against all schemas
+    - name: Validate values.yaml against schema
       uses: cardinalby/schema-validator-action@v3
       with:
         file: path/to/chart/values.yaml
-        schema: lint-helm-chart-v2/${{ matrix.schema }}
-      strategy:
-        matrix:
-          schema:
-            - restrict-dbm-host.schema.json
-            # Add more schema files here as needed
+        schema: lint-helm-chart-v2/zageno_helm.schema.json
 
     - name: Check for allowed GitHub Actions
       shell: bash
