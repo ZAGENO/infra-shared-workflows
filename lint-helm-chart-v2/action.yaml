@@ -25,7 +25,12 @@ runs:
 
     - name: Run chart-testing (lint)
       shell: bash
-      run: ct lint --target-branch ${{ github.base_ref }}
+      run: |
+        TARGET_BRANCH="${{ github.base_ref }}"
+        if [ -z "$TARGET_BRANCH" ]; then
+          TARGET_BRANCH="${{ github.ref_name }}"
+        fi
+        ct lint --target-branch "$TARGET_BRANCH"
 
     - name: Install Python dependencies for schema validation
       shell: bash
