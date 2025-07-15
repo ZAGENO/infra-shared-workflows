@@ -1,0 +1,49 @@
+name: 'Lint Helm Charts v2'
+description: 'Lints helm charts with central schema validation'
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.10.0
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        check-latest: true
+
+    - name: Set up chart-testing
+      uses: helm/chart-testing-action@v2.3.1
+
+    - name: Run chart-testing (lint)
+      shell: bash
+      run: ct lint --target-branch ${{ github.base_ref }}
+
+    - name: Install Python dependencies for schema validation
+      shell: bash
+      run: pip install pyyaml jsonschema
+
+    - name: Validate values.yaml against all schemas
+      uses: cardinalby/schema-validator-action@v3
+      with:
+        file: path/to/chart/values.yaml
+        schema: lint-helm-chart-v2/${{ matrix.schema }}
+      strategy:
+        matrix:
+          schema:
+            - restrict-dbm-host.schema.json
+            # Add more schema files here as needed
+
+    - name: Check for allowed GitHub Actions
+      shell: bash
+      run: |
+        pip install pyyaml
+        python3 lint-helm-chart-v2/allow-actions.py 
