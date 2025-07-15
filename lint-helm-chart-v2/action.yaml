@@ -36,11 +36,15 @@ runs:
       shell: bash
       run: pip install pyyaml jsonschema
 
-    - name: Validate values.yaml against schema
+    - name: Download schema file
+      shell: bash
+      run: curl -o zageno_helm.schema.json https://raw.githubusercontent.com/ZAGENO/infra-shared-workflows/main/lint-helm-chart-v2/zageno_helm.schema.json
+
+    - name: Validate all values files against schema
       uses: cardinalby/schema-validator-action@v3
       with:
         file: charts/*/values*.yaml
-        schema: lint-helm-chart-v2/zageno_helm.schema.json
+        schema: zageno_helm.schema.json
 
     - name: Check for allowed GitHub Actions
       shell: bash
