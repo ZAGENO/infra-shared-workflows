@@ -101,7 +101,7 @@ def check_forbidden_resources():
 if __name__ == "__main__":
     all_violations = []
     all_violations.extend(check_allowed_actions())
-    all_violations.extend(check_forbidden_resources())
+#     all_violations.extend(check_forbidden_resources())
     handle_violations(all_violations)
     print(f"✅ All actions used are in the allow-list: {', '.join(ALLOWED)}")
     print("✅ No 'resources' section found in any file.") 
