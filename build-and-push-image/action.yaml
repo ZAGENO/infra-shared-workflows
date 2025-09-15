@@ -99,6 +99,7 @@ runs:
       with:
         version: latest
         endpoint: builders
+        cache-binary: false
 
     -
       name: Build and push
