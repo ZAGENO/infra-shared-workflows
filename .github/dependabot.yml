@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: "monthly"
     groups:
-      common-actions:
+      build-and-push-image:
         applies-to: version-updates
         patterns:
           - "*"
@@ -25,7 +25,7 @@ updates:
     schedule:
       interval: "monthly"
     groups:
-      common-actions:
+      build-and-push-image-aws:
         applies-to: version-updates
         patterns:
           - "*"
@@ -41,7 +41,7 @@ updates:
     schedule:
       interval: "monthly"
     groups:
-      common-actions:
+      python:
         applies-to: version-updates
         patterns:
           - "*"
@@ -57,7 +57,7 @@ updates:
     schedule:
       interval: "monthly"
     groups:
-      common-actions:
+      lint-helm-chart:
         applies-to: version-updates
         patterns:
           - "*"
