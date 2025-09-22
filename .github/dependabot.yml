@@ -6,7 +6,54 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directory: "/build-and-push-image"
+    schedule:
+      interval: "monthly"
+    groups:
+      common-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "ci/cd"
+      - "github-actions"
+
+    ###Action 2
+  - package-ecosystem: "github-actions"
+    directory: "/build-and-push-image-aws"
+    schedule:
+      interval: "monthly"
+    groups:
+      common-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "ci/cd"
+      - "github-actions"
+
+
+    ###Action 3
+  - package-ecosystem: "github-actions"
+    directory: "/build-and-push-python-package"
+    schedule:
+      interval: "monthly"
+    groups:
+      common-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "ci/cd"
+      - "github-actions"
+
+
+    ###Action 4
+  - package-ecosystem: "github-actions"
+    directory: "/lint-helm-chart-v2"
     schedule:
       interval: "monthly"
     groups:
