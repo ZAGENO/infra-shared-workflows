@@ -82,23 +82,23 @@ runs:
       id: sha8
       run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
     
-    -
-      name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: linux/amd64
+    # -
+    #   name: Set up QEMU
+    #   uses: docker/setup-qemu-action@v3
+    #   with:
+    #     platforms: linux/amd64
 
-    # - 
-    #   name: Set up Docker Context
-    #   shell: bash
-    #   run: docker context create builders
+    - 
+      name: Set up Docker Context
+      shell: bash
+      run: docker context create builders
 
     -
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
         version: latest
-        endpoint: builders
+        install: true
         cache-binary: false
 
     -
