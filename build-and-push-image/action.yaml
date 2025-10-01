@@ -110,7 +110,7 @@ runs:
         file: ${{ inputs.dockerfile_path }}
         platforms: linux/amd64
         provenance: false
-        push: true
+        push: false
         build-args: |
           ${{ inputs.build_args }}
         tags: |
