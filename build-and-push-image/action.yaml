@@ -125,7 +125,7 @@ runs:
     -
       name: Build and push
       if: ${{ inputs.image_tag }} 
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
@@ -145,7 +145,7 @@ runs:
     -
       name: Build and push
       if: ${{ !inputs.image_tag && !inputs.environment }}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
