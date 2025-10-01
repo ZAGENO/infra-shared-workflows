@@ -120,7 +120,7 @@ runs:
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
         cache-from: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache
-        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache
+        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache,mode=max
 
     -
       name: Build and push
@@ -140,7 +140,7 @@ runs:
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
         cache-from: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache
-        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache
+        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/python-microservice-dev:cache,mode=max
 
     -
       name: Build and push
