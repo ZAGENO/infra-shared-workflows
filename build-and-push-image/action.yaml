@@ -161,5 +161,5 @@ runs:
           org.opencontainers.image.source=github.com/${{ github.repository }}
         # cache-from: type=gha
         # cache-to: type=gha,mode=max
-        cache-from: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache
-        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache,mode=max
+        cache-from: type=registry,ref=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:cache
+        cache-to: type=registry,ref=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:cache,mode=max
