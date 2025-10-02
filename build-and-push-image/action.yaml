@@ -103,6 +103,7 @@ runs:
 
     - name: generate tag
       id: gen_tag
+      shell: bash
       if: ${{ !inputs.image_tag && inputs.environment }}
       run: |
         echo 'tags<<EOF' >> $GITHUB_OUTPUT
@@ -111,6 +112,7 @@ runs:
         echo 'EOF' >> $GITHUB_OUTPUT
 
     - name: test
+      shell: bash
       run: echo ${{ steps.gen_tag.outputs.tags }}
 
     -
