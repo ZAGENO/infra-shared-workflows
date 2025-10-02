@@ -109,8 +109,8 @@ runs:
       id: gen_tag
       shell: bash
       run: |
-        echo $INPUT_IMAGE_TAG
-        echo $INPUT_ENVIRONMENT
+        echo ${{ inputs.image_tag }}
+        echo ${{ inputs.environment }}
         if [[ -z "$INPUT_IMAGE_TAG" && -n "$INPUT_ENVIRONMENT" ]]; then
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest" >> $GITHUB_OUTPUT
