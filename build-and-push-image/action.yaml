@@ -101,7 +101,8 @@ runs:
         install: true
         cache-binary: false
 
-    - name: generate tag if input environment
+    - 
+      name: generate tag if input environment
       env:
         INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
