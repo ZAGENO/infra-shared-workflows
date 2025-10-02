@@ -180,7 +180,7 @@ runs:
         build-args: |
           ${{ inputs.build_args }}
         tags: |
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+          ${{ steps.gen_tag.outputs.tags }}
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
