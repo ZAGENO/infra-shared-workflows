@@ -110,6 +110,16 @@ runs:
         echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }} > $GITHUB_OUTPUT
         echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest >> $GITHUB_OUTPUT
         echo 'EOF' >> $GITHUB_OUTPUT
+      if: ${{ !inputs.image_tag && !inputs.environment }}
+      run: |
+        echo 'tags<<EOF' >> $GITHUB_OUTPUT
+        echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }} > $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+      if: ${{ inputs.image_tag }} 
+      run: |
+        echo 'tags<<EOF' >> $GITHUB_OUTPUT
+        echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }} > $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
 
     - name: test
       shell: bash
@@ -124,7 +134,7 @@ runs:
         file: ${{ inputs.dockerfile_path }}
         platforms: linux/amd64
         provenance: false
-        push: false
+        push: true
         build-args: |
           ${{ inputs.build_args }}
         tags: |
@@ -145,7 +155,7 @@ runs:
         file: ${{ inputs.dockerfile_path }}
         platforms: linux/amd64
         provenance: false
-        push: false
+        push: true
         build-args: |
           ${{ inputs.build_args }}
         tags: |
@@ -165,7 +175,7 @@ runs:
         file: ${{ inputs.dockerfile_path }}
         platforms: linux/amd64
         provenance: false
-        push: false
+        push: true
         build-args: |
           ${{ inputs.build_args }}
         tags: |
