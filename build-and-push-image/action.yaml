@@ -101,6 +101,18 @@ runs:
         install: true
         cache-binary: false
 
+    - name: generate tag
+      id: gen_tag
+      if: ${{ !inputs.image_tag && inputs.environment }}
+      run: |
+        echo 'tags<<EOF' >> $GITHUB_OUTPUT
+        echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }} > $GITHUB_OUTPUT
+        echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+
+    - name: test
+      run: echo ${{ steps.gen_tag.outputs.tags }}
+
     -
       name: Build and push
       if: ${{ !inputs.image_tag && inputs.environment }}
