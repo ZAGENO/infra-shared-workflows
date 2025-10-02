@@ -107,7 +107,6 @@ runs:
         INPUT_ENVIRONMENT: ${{ inputs.environment }}
       id: gen_tag
       shell: bash
-      if: ${{ !inputs.image_tag && inputs.environment }}
       run: |
         if [[ -z "$INPUT_IMAGE_TAG" && -n "$INPUT_ENVIRONMENT" ]]; then
           echo ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }} >> $GITHUB_OUTPUT
