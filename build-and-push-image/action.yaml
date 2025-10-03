@@ -132,47 +132,6 @@ runs:
 
     -
       name: Build and push
-      if: ${{ !inputs.image_tag && inputs.environment }}
-      uses: docker/build-push-action@v6
-      with:
-        context: ${{ inputs.build_context }}
-        file: ${{ inputs.dockerfile_path }}
-        platforms: linux/amd64
-        provenance: false
-        push: true
-        build-args: |
-          ${{ inputs.build_args }}
-        tags: |
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
-        labels: |
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.source=github.com/${{ github.repository }}
-        cache-from: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache
-        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache,mode=max
-
-    -
-      name: Build and push
-      if: ${{ inputs.image_tag }} 
-      uses: docker/build-push-action@v6
-      with:
-        context: ${{ inputs.build_context }}
-        file: ${{ inputs.dockerfile_path }}
-        platforms: linux/amd64
-        provenance: false
-        push: true
-        build-args: |
-          ${{ inputs.build_args }}
-        tags: |
-          ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
-        labels: |
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.source=github.com/${{ github.repository }}
-        cache-from: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache
-        cache-to: type=registry,ref=us-west1-docker.pkg.dev/prj-dev-pygeno-ca7b/python-microservice-dev/${{ inputs.image_name }}:cache,mode=max
-
-    -
-      name: Build and push
       if: ${{ !inputs.image_tag && !inputs.environment }}
       uses: docker/build-push-action@v6
       with:
@@ -188,7 +147,5 @@ runs:
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
         cache-from: type=registry,ref=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:cache
         cache-to: type=registry,ref=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:cache,mode=max
