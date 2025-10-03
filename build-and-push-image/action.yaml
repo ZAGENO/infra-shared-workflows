@@ -111,14 +111,14 @@ runs:
       run: |
         echo ${{ inputs.image_tag }}
         echo ${{ inputs.environment }}
-        if [[ -z "$INPUT_IMAGE_TAG" && -n "$INPUT_ENVIRONMENT" ]]; then
+        if [[ "${{ inputs.image_tag }}" == "" && "${{ inputs.environment }}" != "" ]]; then
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}" >> $GITHUB_OUTPUT
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest" >> $GITHUB_OUTPUT
         fi
-        if [[ -n "$INPUT_IMAGE_TAG" ]]; then
+        if [[ "${{ inputs.image_tag }}" != "" ]]; then
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"" >> $GITHUB_OUTPUT
         fi
-        if [[ -n "$INPUT_IMAGE_TAG" ]]; then
+        if [[ "${{ inputs.image_tag }}" == "" && "${{ inputs.environment }}" == "" ]]; then
           echo "tags=${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}"" >> $GITHUB_OUTPUT
         fi
 
