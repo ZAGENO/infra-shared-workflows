@@ -39,8 +39,8 @@ ALLOWED = [
     "sonarsource/sonarcloud-github-action@master",
     "snok/install-poetry@v1",
     "5monkeys/cobertura-action@master",
-    "cirrus-actions/rebase@1.8"
-    "octokit/request-action@v2.x"
+    "cirrus-actions/rebase@1.8",
+    "octokit/request-action@v2.x",
     "worksome/jira-branch-name-validator-action@v2"
 ]
 
