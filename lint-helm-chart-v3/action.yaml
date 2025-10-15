@@ -1,4 +1,4 @@
-name: 'Lint Helm Charts v2'
+name: 'Lint Helm Charts V3'
 description: 'Lints helm charts with central schema validation'
 
 runs:
