@@ -8,6 +8,7 @@ ALLOWED = [
     "actions/checkout@v3",
     "actions/checkout@v4",
     "actions/setup-java@v3",
+    "actions/setup-java@v4",
     "actions/setup-node@v3",
     "actions/setup-node@v4",
     "actions/setup-python@v2",
@@ -28,6 +29,8 @@ ALLOWED = [
     "ZAGENO/infra-shared-workflows/build-and-push-image@main",
     "ZAGENO/infra-shared-workflows/build-and-push-image-aws@main",
     "ZAGENO/infra-shared-workflows/lint-helm-chart@main",
+    "ZAGENO/infra-shared-workflows/lint-helm-chart-v2@main",
+    "ZAGENO/infra-shared-workflows/lint-helm-chart-v3@main",
     "elgohr/gcloud-login-action@v1",
     "elgohr/gcloud-login-action@master",
     "addnab/docker-run-action@v3",
@@ -37,6 +40,8 @@ ALLOWED = [
     "snok/install-poetry@v1",
     "5monkeys/cobertura-action@master",
     "cirrus-actions/rebase@1.8"
+    "octokit/request-action@v2.x"
+    "worksome/jira-branch-name-validator-action@v2"
 ]
 
 def handle_violations(violations):
