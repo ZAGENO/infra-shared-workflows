@@ -41,7 +41,8 @@ ALLOWED = [
     "5monkeys/cobertura-action@master",
     "cirrus-actions/rebase@1.8",
     "octokit/request-action@v2.x",
-    "worksome/jira-branch-name-validator-action@v2"
+    "worksome/jira-branch-name-validator-action@v2",
+    "suo/flake8-github-action@releases/v1"
 ]
 
 def handle_violations(violations):
