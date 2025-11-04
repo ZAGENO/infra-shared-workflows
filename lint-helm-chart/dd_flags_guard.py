@@ -77,26 +77,25 @@ def collect_dd_flags(values_data: Any) -> Dict[str, Dict[str, Any]]:
     return dd_flags
 
 
-def validate_file(file_path: str, repo: str, allowed_optional_flags: Set[str]) -> List[str]:
+def load_yaml(file_path: str) -> Any:
+    with open(file_path) as f:
+        return yaml.safe_load(f)
+
+
+def collect_dd_flags_from_file(file_path: str) -> Dict[str, Dict[str, Any]]:
+    data = load_yaml(file_path)
+    return collect_dd_flags(data)
+
+
+def validate_optional_flags(file_path: str, repo: str, allowed_optional_flags: Set[str]) -> List[str]:
     violations: List[str] = []
     try:
-        with open(file_path) as f:
-            data = yaml.safe_load(f)
+        dd_flags = collect_dd_flags_from_file(file_path)
     except Exception as e:
         violations.append(f"{file_path}: Unable to parse YAML: {e}")
         return violations
 
-    dd_flags = collect_dd_flags(data)
-
-    # Presence checks
-    missing_required = sorted(var for var in REQUIRED_DD_VARS if var not in dd_flags)
-    if missing_required:
-        violations.append(
-            f"{file_path}: Missing required Datadog vars under 'env': {', '.join(missing_required)}"
-        )
-
-    # Any other DD_* flags present must be explicitly allowed for this repo
-    for flag_name, entry in sorted(dd_flags.items()):
+    for flag_name in sorted(dd_flags.keys()):
         if flag_name in REQUIRED_DD_VARS:
             continue
         if flag_name not in allowed_optional_flags:
@@ -122,22 +121,81 @@ def main() -> None:
     allowed_optional_flags = allowlist.get(repo, set())
 
     # Look for values files only under charts/*/
-    candidate_files: List[str] = []
+    charts_info: Dict[str, Dict[str, str]] = {}
     for chart_dir in glob.glob(os.path.join(".", "charts", "*")):
         if not os.path.isdir(chart_dir):
             continue
-        for fname in ("values.yaml", "values-production-us-central1.yaml"):
-            fpath = os.path.join(chart_dir, fname)
-            if os.path.isfile(fpath):
-                candidate_files.append(fpath)
+        base_path = os.path.join(chart_dir, "values.yaml")
+        prod_path = os.path.join(chart_dir, "values-production-us-central1.yaml")
+        entry: Dict[str, str] = {}
+        if os.path.isfile(base_path):
+            entry["base"] = base_path
+        if os.path.isfile(prod_path):
+            entry["prod"] = prod_path
+        if entry:
+            charts_info[chart_dir] = entry
 
-    if not candidate_files:
+    if not charts_info:
         print("No values files found to validate under ./charts/*/. Skipping Datadog flags guard.")
         return
 
     all_violations: List[str] = []
-    for fpath in sorted(candidate_files):
-        all_violations.extend(validate_file(fpath, repo, allowed_optional_flags))
+    # First, validate disallowed optional flags per file
+    for chart_dir, files in sorted(charts_info.items()):
+        for fpath in sorted(files.values()):
+            all_violations.extend(
+                validate_optional_flags(fpath, repo, allowed_optional_flags)
+            )
+
+    # Next, validate required flags presence with precedence: prod > base
+    for chart_dir, files in sorted(charts_info.items()):
+        prod_path = files.get("prod")
+        base_path = files.get("base")
+
+        prod_flags: Set[str] = set()
+        base_flags: Set[str] = set()
+        prod_parse_error: str = ""
+        base_parse_error: str = ""
+
+        if prod_path:
+            try:
+                prod_flags = set(collect_dd_flags_from_file(prod_path).keys())
+            except Exception as e:
+                prod_parse_error = f"{prod_path}: Unable to parse YAML: {e}"
+        if base_path:
+            try:
+                base_flags = set(collect_dd_flags_from_file(base_path).keys())
+            except Exception as e:
+                base_parse_error = f"{base_path}: Unable to parse YAML: {e}"
+
+        # If there are parse errors, report and skip presence checks for that file
+        if prod_parse_error:
+            all_violations.append(prod_parse_error)
+        if base_parse_error:
+            all_violations.append(base_parse_error)
+
+        # Determine missing required with precedence
+        missing_for_chart: List[str] = []
+        for var in sorted(REQUIRED_DD_VARS):
+            if var in prod_flags:
+                continue  # satisfied by prod
+            if var in base_flags:
+                continue  # satisfied by base when prod missing
+            missing_for_chart.append(var)
+
+        if missing_for_chart:
+            # Attribute the error to values.yaml if present, else to prod if present, else to whichever exists
+            if base_path:
+                all_violations.append(
+                    f"{base_path}: Missing required Datadog vars under 'env': {', '.join(missing_for_chart)}"
+                )
+            elif prod_path:
+                all_violations.append(
+                    f"{prod_path}: Missing required Datadog vars under 'env': {', '.join(missing_for_chart)}"
+                )
+            else:
+                # Should not happen because we only create chart entries when at least one file exists
+                pass
 
     if all_violations:
         print("❌ Datadog flags policy violations detected:")
