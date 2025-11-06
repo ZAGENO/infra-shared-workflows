@@ -42,7 +42,11 @@ ALLOWED = [
     "cirrus-actions/rebase@1.8",
     "octokit/request-action@v2.x",
     "worksome/jira-branch-name-validator-action@v2",
-    "suo/flake8-github-action@releases/v1"
+    "suo/flake8-github-action@releases/v1",
+    "actions/setup-python@v5",
+    "actions/cache@v3",
+    "SonarSource/sonarcloud-github-action@master"
+"
 ]
 
 def handle_violations(violations):
