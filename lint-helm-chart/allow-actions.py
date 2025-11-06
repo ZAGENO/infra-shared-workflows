@@ -46,7 +46,6 @@ ALLOWED = [
     "actions/setup-python@v5",
     "actions/cache@v3",
     "SonarSource/sonarcloud-github-action@master"
-"
 ]
 
 def handle_violations(violations):
