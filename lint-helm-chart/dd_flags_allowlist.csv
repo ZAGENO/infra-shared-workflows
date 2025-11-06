@@ -16,3 +16,4 @@ quote-query-module,DD_LOGS_INJECTION
 quote-document-processor,DD_LOGS_INJECTION
 rfq-service,DD_LOGS_INJECTION
 On-Demand-Product-Info-Service,DD_LOGS_INJECTION
+prism-pipeline,DD_LOGS_INJECTION
