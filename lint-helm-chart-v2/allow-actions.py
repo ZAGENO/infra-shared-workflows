@@ -38,6 +38,7 @@ ALLOWED = [
     "sliteteam/github-action-git-crypt-unlock@1.2.0",
     "dcarbone/install-yq-action@v1.1.1",
     "sonarsource/sonarcloud-github-action@master",
+    "SonarSource/sonarcloud-github-action@master",
     "snok/install-poetry@v1",
     "5monkeys/cobertura-action@master",
     "cirrus-actions/rebase@1.8"
