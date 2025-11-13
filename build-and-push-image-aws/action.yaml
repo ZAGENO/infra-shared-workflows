@@ -45,7 +45,7 @@ runs:
   steps:
     - 
       name: 'Configure AWS credentials'
-      uses: aws-actions/configure-aws-credentials@v3
+      uses: aws-actions/configure-aws-credentials@v5
       with:
         aws-access-key-id: ${{ inputs.aws_access_key_id }}
         aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
@@ -80,7 +80,7 @@ runs:
     
     -
       name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
       with:
         platforms: linux/amd64
 
@@ -100,7 +100,7 @@ runs:
     -
       name: Build and push
       if: ${{ !inputs.image_tag && inputs.environment }}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
@@ -121,7 +121,7 @@ runs:
     -
       name: Build and push
       if: ${{ inputs.image_tag }} 
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
@@ -141,7 +141,7 @@ runs:
     -
       name: Build and push
       if: ${{ !inputs.image_tag && !inputs.environment }}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.build_context }}
         file: ${{ inputs.dockerfile_path }}
