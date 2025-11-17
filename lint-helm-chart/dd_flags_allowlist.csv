@@ -18,3 +18,4 @@ rfq-service,DD_LOGS_INJECTION
 On-Demand-Product-Info-Service,DD_LOGS_INJECTION
 prism-pipeline,DD_LOGS_INJECTION
 analytic-api-service,DD_LOGS_INJECTION
+supplier-service,DD_LOGS_INJECTION
