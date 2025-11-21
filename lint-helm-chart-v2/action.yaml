@@ -1,4 +1,4 @@
-name: 'Lint Helm Charts v2'
+name: 'Lint Helm Charts V3'
 description: 'Lints helm charts with central schema validation'
 
 runs:
@@ -45,3 +45,7 @@ runs:
     - name: Enforce org policy
       shell: bash
       run: python3 "${{ github.action_path }}/allow-actions.py"
+
+    - name: Enforce Datadog flags policy
+      shell: bash
+      run: python3 "${{ github.action_path }}/dd_flags_guard.py"
