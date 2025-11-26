@@ -34,6 +34,8 @@ ALLOWED = [
     "ZAGENO/infra-shared-workflows/lint-helm-chart-v2@main",
     "ZAGENO/infra-shared-workflows/lint-helm-chart-v3@main",
     "ZAGENO/infra-shared-workflows/build-and-push-image@DCOP-3461-optimize-pygeno-pipeline",
+    "ZAGENO/pygeno/.github/workflows/build-publish-docker-image.yml@master",
+    "TimonVS/pr-labeler-action@v3",
     "elgohr/gcloud-login-action@v1",
     "elgohr/gcloud-login-action@master",
     "addnab/docker-run-action@v3",
