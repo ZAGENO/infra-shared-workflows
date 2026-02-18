@@ -21,13 +21,15 @@ runs:
         check-latest: true
       
     - uses: actions/checkout@v4
-    - name: Install Gitleaks (Free)
+    - name: Install Gitleaks
+      shell: bash
       run: |
         wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
         tar -xzf gitleaks-linux-amd64.tar.gz
         sudo mv gitleaks /usr/local/bin/
     # 3️⃣ Run Secret Scan
     - name: Run Gitleaks Scan
+      shell: bash
       run: |
         gitleaks detect \
           --source . \
