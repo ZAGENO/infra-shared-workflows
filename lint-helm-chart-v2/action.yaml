@@ -25,20 +25,20 @@ runs:
       shell: bash
       run: |
         set -e
-    
+
         VERSION="8.24.2"
-    
+
         echo "Downloading Gitleaks $VERSION"
         curl -sSL \
           https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz \
           -o gitleaks.tar.gz
-    
+
         echo "Extracting..."
         tar -xzf gitleaks.tar.gz
-    
+
         echo "Installing..."
         sudo mv gitleaks /usr/local/bin/
-    
+
         gitleaks version
 
     # 3️⃣ Run Secret Scan
@@ -47,6 +47,7 @@ runs:
       run: |
         gitleaks detect \
           --source . \
+          --log-opts="origin/${{ github.base_ref }}..HEAD" \
           --redact \
           --verbose \
           --exit-code 1
