@@ -24,9 +24,10 @@ runs:
     - name: Install Gitleaks
       shell: bash
       run: |
-        wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
-        tar -xzf gitleaks-linux-amd64.tar.gz
+        curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz -o gitleaks.tar.gz
+        tar -xzf gitleaks.tar.gz
         sudo mv gitleaks /usr/local/bin/
+
     # 3️⃣ Run Secret Scan
     - name: Run Gitleaks Scan
       shell: bash
