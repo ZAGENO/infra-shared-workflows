@@ -22,6 +22,15 @@ runs:
 
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.3.1
+      
+    - uses: actions/checkout@v4
+    - name: Gitleaks PR Scan
+      uses: gitleaks/gitleaks-action@v2
+      with:
+        args: detect \
+          --source . \
+          --log-level warn \
+          --exit-code 0
 
     - name: Run chart-testing (lint)
       shell: bash
