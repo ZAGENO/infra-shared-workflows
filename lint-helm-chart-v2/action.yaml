@@ -42,6 +42,7 @@ runs:
         gitleaks version
 
     - name: Run Gitleaks Scan
+      shell: bash
       run: |
         gitleaks detect \
           --source . \
