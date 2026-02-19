@@ -20,7 +20,7 @@ runs:
         python-version: '3.9'
         check-latest: true
       
-    - uses: actions/checkout@v4
+
     - name: Install Gitleaks
       shell: bash
       run: |
@@ -40,6 +40,10 @@ runs:
         sudo mv gitleaks /usr/local/bin/
 
         gitleaks version
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Run Gitleaks Scan
       shell: bash
