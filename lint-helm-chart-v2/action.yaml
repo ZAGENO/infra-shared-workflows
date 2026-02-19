@@ -19,6 +19,42 @@ runs:
       with:
         python-version: '3.9'
         check-latest: true
+      
+
+    - name: Install Gitleaks
+      shell: bash
+      run: |
+        set -e
+
+        VERSION="8.24.2"
+
+        echo "Downloading Gitleaks $VERSION"
+        curl -sSL \
+          https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz \
+          -o gitleaks.tar.gz
+
+        echo "Extracting..."
+        tar -xzf gitleaks.tar.gz
+
+        echo "Installing..."
+        sudo mv gitleaks /usr/local/bin/
+
+        gitleaks version
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run Gitleaks Scan
+      shell: bash
+      run: |
+        gitleaks detect \
+          --source . \
+          --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.sha }}" \
+          --redact \
+          --verbose \
+          --exit-code 1
+
 
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.3.1
