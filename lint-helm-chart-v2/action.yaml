@@ -41,16 +41,15 @@ runs:
 
         gitleaks version
 
-    # 3️⃣ Run Secret Scan
     - name: Run Gitleaks Scan
-      shell: bash
       run: |
         gitleaks detect \
           --source . \
-          --log-opts="origin/${{ github.base_ref }}..HEAD" \
+          --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.sha }}" \
           --redact \
           --verbose \
           --exit-code 1
+
 
     - name: Set up chart-testing
       uses: helm/chart-testing-action@v2.3.1
