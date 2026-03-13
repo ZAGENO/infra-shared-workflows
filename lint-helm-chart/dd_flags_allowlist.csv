@@ -20,3 +20,4 @@ prism-pipeline,DD_LOGS_INJECTION
 analytic-api-service,DD_LOGS_INJECTION
 supplier-service,DD_LOGS_INJECTION
 pricing-catalogue-event-handler-service,DD_LOGS_INJECTION
+catalog-api-service,DD_LOGS_INJECTION
