@@ -44,6 +44,7 @@ runs:
       run: |
         gitleaks detect \
           --source . \
+          --no-git \
           --redact \
           --verbose \
           --exit-code 1
