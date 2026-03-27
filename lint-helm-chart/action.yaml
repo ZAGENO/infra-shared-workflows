@@ -44,7 +44,7 @@ runs:
       run: |
         gitleaks detect \
           --source . \
-          --no-git \
+          --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.sha }}" \
           --redact \
           --verbose \
           --exit-code 1
