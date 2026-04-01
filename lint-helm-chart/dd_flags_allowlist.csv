@@ -23,3 +23,4 @@ pricing-catalogue-event-handler-service,DD_LOGS_INJECTION
 catalog-api-service,DD_LOGS_INJECTION
 portfolio,DD_LOGS_INJECTION,DD_TRACE_ENABLED
 predicted-shipping-date-service,DD_LOGS_INJECTION 
+marketplace-mcp-server,DD_LOGS_INJECTION 
