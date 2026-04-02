@@ -1,5 +1,5 @@
 repo,allowed_flags
-hawkeye-search,DD_LOGS_INJECTION
+hawkeye-search,DD_LOGS_INJECTION,DD_TRACE_AGENT_URL,DD_TRACE_ENABLED,DD_TRACE_SAMPLE_RATE 
 infra-shared-workflows,DD_LOGS_INJECTION
 pygeno,DD_LOGS_INJECTION
 product-aggregator,DD_LOGS_INJECTION
