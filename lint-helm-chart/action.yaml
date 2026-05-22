@@ -15,30 +15,6 @@ runs:
       with:
         python-version: '3.9'
         check-latest: true
-    - name: Set up chart-testing
-      uses: helm/chart-testing-action@v2.3.1
-    - name: Run chart-testing (lint)
-      shell: bash
-      run: |
-        TARGET_BRANCH="${{ github.base_ref }}"
-        if [ -z "$TARGET_BRANCH" ]; then
-          TARGET_BRANCH="${{ github.ref_name }}"
-        fi
-        ct lint --target-branch "$TARGET_BRANCH"
-    - name: Validate all values files against schema
-      uses: cardinalby/schema-validator-action@v3
-      with:
-        file: charts/*/values*.yaml
-        schema: ${{ github.action_path }}/zageno_helm.schema.json
-    - name: Install Python dependencies for policy enforcement
-      shell: bash
-      run: pip install pyyaml
-    - name: Enforce org policy
-      shell: bash
-      run: python3 "${{ github.action_path }}/allow-actions.py"
-    - name: Enforce Datadog flags policy
-      shell: bash
-      run: python3 "${{ github.action_path }}/dd_flags_guard.py"
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -66,3 +42,27 @@ runs:
           --redact \
           --verbose \
           --exit-code 1
+    - name: Set up chart-testing
+      uses: helm/chart-testing-action@v2.3.1
+    - name: Run chart-testing (lint)
+      shell: bash
+      run: |
+        TARGET_BRANCH="${{ github.base_ref }}"
+        if [ -z "$TARGET_BRANCH" ]; then
+          TARGET_BRANCH="${{ github.ref_name }}"
+        fi
+        ct lint --target-branch "$TARGET_BRANCH"
+    - name: Validate all values files against schema
+      uses: cardinalby/schema-validator-action@v3
+      with:
+        file: charts/*/values*.yaml
+        schema: ${{ github.action_path }}/zageno_helm.schema.json
+    - name: Install Python dependencies for policy enforcement
+      shell: bash
+      run: pip install pyyaml
+    - name: Enforce org policy
+      shell: bash
+      run: python3 "${{ github.action_path }}/allow-actions.py"
+    - name: Enforce Datadog flags policy
+      shell: bash
+      run: python3 "${{ github.action_path }}/dd_flags_guard.py"
