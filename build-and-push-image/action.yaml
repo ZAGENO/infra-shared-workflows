@@ -9,6 +9,9 @@ inputs:
   build_args:
     description: Build arguments
     required: false
+  secrets:
+    description: BuildKit secrets passed to the Docker build
+    required: false
   dockerfile_path:
     description: Path to the dockerfile
     required: false
@@ -113,6 +116,8 @@ runs:
         push: true
         build-args: |
           ${{ inputs.build_args }}
+        secrets: |
+          ${{ inputs.secrets }}
         tags: |
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:latest
@@ -134,6 +139,8 @@ runs:
         push: true
         build-args: |
           ${{ inputs.build_args }}
+        secrets: |
+          ${{ inputs.secrets }}
         tags: |
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
         labels: |
@@ -154,6 +161,8 @@ runs:
         push: true
         build-args: |
           ${{ inputs.build_args }}
+        secrets: |
+          ${{ inputs.secrets }}
         tags: |
           ${{ inputs.gar_host }}/${{ inputs.gar_project }}/${{ inputs.gar_repository }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
         labels: |
