@@ -59,9 +59,10 @@ runs:
 
   steps:
     - name: Validate dev secondary inputs
-      if: ${{ inputs.environment == 'dev' }}
+      id: dev-config
       shell: bash
       env:
+        ENVIRONMENT: ${{ inputs.environment }}
         gar_host: ${{ inputs.gar_host }}
         gar_project: ${{ inputs.gar_project }}
         gar_repository: ${{ inputs.gar_repository }}
@@ -69,6 +70,10 @@ runs:
         gcp_service_account: ${{ inputs.gcp_service_account }}
         image_name: ${{ inputs.image_name }}
       run: |
+        if [[ "$ENVIRONMENT" != dev ]]; then
+          printf 'is-dev=false\n' >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
         missing=0
         for input in gar_host gar_project gar_repository gcp_workload_identity_provider gcp_service_account image_name; do
           if [[ -z "${!input//[[:space:]]/}" ]]; then
@@ -76,7 +81,10 @@ runs:
             missing=1
           fi
         done
-        exit "$missing"
+        if [[ "$missing" == 1 ]]; then
+          exit 1
+        fi
+        printf 'is-dev=true\n' >> "$GITHUB_OUTPUT"
 
     - 
       name: 'Configure AWS credentials'
@@ -98,7 +106,7 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Authenticate to Google Cloud for dev
-      if: ${{ inputs.environment == 'dev' }}
+      if: ${{ steps.dev-config.outputs.is-dev == 'true' }}
       id: gcp-auth
       uses: google-github-actions/auth@v2
       with:
@@ -108,7 +116,7 @@ runs:
         service_account: ${{ inputs.gcp_service_account }}
 
     - name: Login to GAR for dev
-      if: ${{ inputs.environment == 'dev' }}
+      if: ${{ steps.dev-config.outputs.is-dev == 'true' }}
       id: login-gar
       uses: docker/login-action@v3
       with:

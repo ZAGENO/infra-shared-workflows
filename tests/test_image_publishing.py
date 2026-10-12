@@ -16,7 +16,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIONS = ("build-and-push-image-aws", "build-and-push-image")
-DEV_ONLY = "${{ inputs.environment == 'dev' }}"
+DEV_ONLY = "${{ steps.dev-config.outputs.is-dev == 'true' }}"
 ECR = "ecr.example.invalid/team/service"
 GAR = "gar.example.invalid/example-project/example-repository/team/service"
 EXPRESSION = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
@@ -80,9 +80,12 @@ def execute(action, inputs, head_ref="", ref="refs/heads/main"):
         }
         for step in action["runs"]["steps"]:
             if "if" in step:
-                if step["if"] != DEV_ONLY:
+                expression = EXPRESSION.fullmatch(step["if"])
+                comparison = re.fullmatch(r"([\w.-]+) == '([^']*)'", expression[1])
+                if not comparison:
                     raise AssertionError(f"Unsupported step condition: {step['if']}")
-                if inputs["environment"] != "dev":
+                # GitHub expression string comparisons are case-insensitive.
+                if context.get(comparison[1], "").casefold() != comparison[2].casefold():
                     continue
             if "uses" in step:
                 calls.append((step["uses"], {
@@ -107,6 +110,9 @@ def execute(action, inputs, head_ref="", ref="refs/heads/main"):
             content = output_file.read_text()
             if content:
                 lines = content.splitlines()
+                if len(lines) == 1 and lines[0] in ("is-dev=true", "is-dev=false"):
+                    context[f"steps.{step['id']}.outputs.is-dev"] = lines[0].split("=")[1]
+                    continue
                 if lines[0] != "tags<<IMAGE_TAGS" or lines[-1] != "IMAGE_TAGS":
                     raise AssertionError(f"Unexpected output format: {content}")
                 outputs["tags"] = lines[1:-1]
@@ -118,7 +124,7 @@ class ImagePublishingTests(unittest.TestCase):
     def test_environment_and_tag_matrix(self):
         for name in ACTIONS:
             action = load_action(name)
-            for environment in ("dev", "staging", "production", "", "preview", "Dev", " dev"):
+            for environment in ("dev", "staging", "production", "", "preview", "Dev", "DEV", " dev"):
                 for explicit in ("", "release-123"):
                     with self.subTest(action=name, environment=environment, tag=explicit):
                         calls, outputs, error = execute(
@@ -157,7 +163,7 @@ class ImagePublishingTests(unittest.TestCase):
     def test_non_dev_needs_no_secondary_settings(self):
         for name in ACTIONS:
             action = load_action(name)
-            for environment in ("staging", "production", "", "preview"):
+            for environment in ("staging", "production", "", "preview", "Dev", "DEV", " dev"):
                 with self.subTest(action=name, environment=environment):
                     inputs = inputs_for(action, environment)
                     for key in SECONDARY[name]:
@@ -244,7 +250,8 @@ class ImagePublishingTests(unittest.TestCase):
                 ids = [step["id"] for step in steps if "id" in step]
                 self.assertEqual(len(ids), len(set(ids)))
                 self.assertEqual(steps[0]["name"], "Validate dev secondary inputs")
-                self.assertEqual(steps[0]["if"], DEV_ONLY)
+                self.assertNotIn("if", steps[0])
+                self.assertEqual(steps[0]["id"], "dev-config")
                 self.assertEqual(action["inputs"]["aws_region"]["default"], "us-east-1")
                 secondary_actions = (
                     ("google-github-actions/auth@v2", "docker/login-action@v3")
