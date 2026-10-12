@@ -1,5 +1,5 @@
 name: 'Build and Push Container Image'
-description: 'Builds and pushes container image to Amazon ECR'
+description: 'Builds and pushes container image to Amazon ECR and, for dev only, Google Artifact Registry'
 
 inputs:
   build_context:
@@ -38,13 +38,57 @@ inputs:
   aws_secret_access_key:
     description: AWS secret access key
     required: true
+  gar_host:
+    description: GAR host (required for dev)
+    required: false
+  gar_project:
+    description: GAR project (required for dev)
+    required: false
+  gar_repository:
+    description: GAR repository (required for dev)
+    required: false
+  gcp_workload_identity_provider:
+    description: GCP workload identity provider (required for dev)
+    required: false
+  gcp_service_account:
+    description: GCP service account (required for dev)
+    required: false
 
 runs:
   using: "composite"
 
   steps:
+    - name: Validate dev secondary inputs
+      id: dev-config
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        gar_host: ${{ inputs.gar_host }}
+        gar_project: ${{ inputs.gar_project }}
+        gar_repository: ${{ inputs.gar_repository }}
+        gcp_workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        gcp_service_account: ${{ inputs.gcp_service_account }}
+        image_name: ${{ inputs.image_name }}
+      run: |
+        if [[ "$ENVIRONMENT" != dev ]]; then
+          printf 'is-dev=false\n' >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        missing=0
+        for input in gar_host gar_project gar_repository gcp_workload_identity_provider gcp_service_account image_name; do
+          if [[ -z "${!input//[[:space:]]/}" ]]; then
+            printf 'Missing required dev input: %s\n' "$input" >&2
+            missing=1
+          fi
+        done
+        if [[ "$missing" == 1 ]]; then
+          exit 1
+        fi
+        printf 'is-dev=true\n' >> "$GITHUB_OUTPUT"
+
     - 
       name: 'Configure AWS credentials'
+      id: aws-credentials
       uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: ${{ inputs.aws_access_key_id }}
@@ -61,23 +105,65 @@ runs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
-    - 
-      name: Get branch name
-      if: ${{ !inputs.image_tag && !inputs.environment }}
-      run: |
-        if [ -n "${GITHUB_HEAD_REF}" ]; then
-          echo "BRANCH_NAME=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
-        else
-          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-        fi
-      shell: bash
+    - name: Authenticate to Google Cloud for dev
+      if: ${{ steps.dev-config.outputs.is-dev == 'true' }}
+      id: gcp-auth
+      uses: google-github-actions/auth@v2
+      with:
+        token_format: access_token
+        create_credentials_file: false
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
 
-    - 
-      name: Get 8 digit SHA
+    - name: Login to GAR for dev
+      if: ${{ steps.dev-config.outputs.is-dev == 'true' }}
+      id: login-gar
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.gar_host }}
+        username: oauth2accesstoken
+        password: ${{ steps.gcp-auth.outputs.access_token }}
+
+    - name: Prepare image tags
+      id: image-tags
       shell: bash
-      id: sha8
-      run: echo "sha8=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-    
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        IMAGE_NAME: ${{ inputs.image_name }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        GAR_HOST: ${{ inputs.gar_host }}
+        GAR_PROJECT: ${{ inputs.gar_project }}
+        GAR_REPOSITORY: ${{ inputs.gar_repository }}
+      run: |
+        images=("$ECR_REGISTRY/$IMAGE_NAME")
+        if [[ "$ENVIRONMENT" == dev ]]; then
+          images+=("$GAR_HOST/$GAR_PROJECT/$GAR_REPOSITORY/$IMAGE_NAME")
+        fi
+        if [[ -n "$IMAGE_TAG" ]]; then
+          tags=("$IMAGE_TAG")
+        elif [[ -n "$ENVIRONMENT" ]]; then
+          tags=("$ENVIRONMENT.${GITHUB_SHA::8}-$GITHUB_RUN_NUMBER" latest)
+        else
+          branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          tags=("$branch.${GITHUB_SHA::8}-$GITHUB_RUN_NUMBER")
+        fi
+        for value in "${images[@]}" "${tags[@]}"; do
+          if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+            printf 'Image paths and tags must not contain line breaks\n' >&2
+            exit 1
+          fi
+        done
+        {
+          printf 'tags<<IMAGE_TAGS\n'
+          for image in "${images[@]}"; do
+            for tag in "${tags[@]}"; do
+              printf '%s:%s\n' "$image" "$tag"
+            done
+          done
+          printf 'IMAGE_TAGS\n'
+        } >> "$GITHUB_OUTPUT"
+
     -
       name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -99,7 +185,6 @@ runs:
 
     -
       name: Build and push
-      if: ${{ !inputs.image_tag && inputs.environment }}
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.build_context }}
@@ -109,49 +194,7 @@ runs:
         push: true
         build-args: |
           ${{ inputs.build_args }}
-        tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ inputs.environment }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:latest
-        labels: |
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.source=github.com/${{ github.repository }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    -
-      name: Build and push
-      if: ${{ inputs.image_tag }} 
-      uses: docker/build-push-action@v5
-      with:
-        context: ${{ inputs.build_context }}
-        file: ${{ inputs.dockerfile_path }}
-        platforms: linux/amd64
-        provenance: false
-        push: true
-        build-args: |
-          ${{ inputs.build_args }}
-        tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
-        labels: |
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.source=github.com/${{ github.repository }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    -
-      name: Build and push
-      if: ${{ !inputs.image_tag && !inputs.environment }}
-      uses: docker/build-push-action@v5
-      with:
-        context: ${{ inputs.build_context }}
-        file: ${{ inputs.dockerfile_path }}
-        platforms: linux/amd64
-        provenance: false
-        push: true
-        build-args: |
-          ${{ inputs.build_args }}
-        tags: |
-          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_name }}:${{ env.BRANCH_NAME }}.${{ steps.sha8.outputs.sha8 }}-${{ github.run_number }}
+        tags: ${{ steps.image-tags.outputs.tags }}
         labels: |
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.source=github.com/${{ github.repository }}
