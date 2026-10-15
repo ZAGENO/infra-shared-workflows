@@ -32,11 +32,11 @@ Both GAR destinations use
 `registry_url` input and both actions' `tags` inputs remain accepted but unused.
 Tag selection remains:
 
-| Inputs | Tags on each selected destination |
-| --- | --- |
-| Explicit `image_tag` | That tag only (no automatic `latest`) |
+| Inputs                           | Tags on each selected destination                    |
+| -------------------------------- | ---------------------------------------------------- |
+| Explicit`image_tag`            | That tag only (no automatic`latest`)               |
 | Environment set, no explicit tag | `<environment>.<sha8>-<run_number>` and `latest` |
-| Neither set | `<branch>.<sha8>-<run_number>` only |
+| Neither set                      | `<branch>.<sha8>-<run_number>` only                |
 
 The branch comes from `GITHUB_HEAD_REF` when present, otherwise from
 `GITHUB_REF` with `refs/heads/` removed. Existing Docker tag validity restrictions

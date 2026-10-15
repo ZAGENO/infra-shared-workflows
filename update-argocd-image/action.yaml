@@ -29,6 +29,50 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Verify manifest repository access
+      shell: bash
+      env:
+        MANIFEST_TOKEN: ${{ inputs.token }}
+        MANIFEST_REPOSITORY: ${{ inputs.repository }}
+        MANIFEST_BRANCH: ${{ inputs.branch }}
+      run: |
+        if [[ -z "$MANIFEST_TOKEN" ]]; then
+          printf '::error::The manifest repository token is empty. Check the calling repository Actions secret and its availability to this job.\n' >&2
+          exit 1
+        fi
+
+        if ! http_code=$(curl --silent --show-error --connect-timeout 10 --max-time 30 \
+          --output /dev/null --write-out '%{http_code}' \
+          --header "Authorization: Bearer $MANIFEST_TOKEN" \
+          --header 'Accept: application/vnd.github+json' \
+          --get --data-urlencode "ref=$MANIFEST_BRANCH" \
+          --url "${GITHUB_API_URL:-https://api.github.com}/repos/$MANIFEST_REPOSITORY/contents/"); then
+          printf '::error::Cannot reach the GitHub API. Check the runner DNS, proxy, TLS, and network access.\n' >&2
+          exit 1
+        fi
+
+        case "$http_code" in
+          200)
+            printf 'Token can read the manifest repository contents on the requested branch.\n'
+            ;;
+          401)
+            printf '::error::GitHub rejected the token (HTTP 401). Check that the secret contains an active PAT, not its name, URL, or a Bearer prefix.\n' >&2
+            exit 1
+            ;;
+          403)
+            printf '::error::GitHub denied repository access (HTTP 403). Check organization PAT approval, SSO authorization, IP restrictions, token permissions, and API rate limits.\n' >&2
+            exit 1
+            ;;
+          404)
+            printf '::error::Repository contents or branch are not visible to this token (HTTP 404). Check the token resource owner, selected repository, Contents permission, and branch name.\n' >&2
+            exit 1
+            ;;
+          *)
+            printf '::error::GitHub repository access check returned HTTP %s.\n' "$http_code" >&2
+            exit 1
+            ;;
+        esac
+
     - name: Check out manifest repository
       uses: actions/checkout@v4
       with:
