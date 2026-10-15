@@ -1,0 +1,79 @@
+name: 'Update Argo CD Image Tag'
+description: 'Updates a Helm image tag in an Argo CD JSON patch and pushes the manifest repository'
+
+inputs:
+  repository:
+    description: Manifest repository in owner/repository format
+    required: true
+  branch:
+    description: Manifest branch watched by Argo CD
+    required: false
+    default: main
+  token:
+    description: GitHub token with contents write access to the manifest repository
+    required: true
+  manifest_path:
+    description: Repository-relative path to the Argo CD JSON patch
+    required: true
+  helm_parameter_name:
+    description: Helm image tag parameter to update
+    required: true
+  parameters_path:
+    description: JSON patch path containing the Helm parameters
+    required: false
+    default: /spec/sources/0/helm/parameters
+  image_tag:
+    description: Published container image tag
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Check out manifest repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.branch }}
+        token: ${{ inputs.token }}
+        path: argocd-manifests
+
+    - name: Install yq
+      uses: dcarbone/install-yq-action@v1.1.1
+      with:
+        version: v4.52.2
+        force: 'true'
+
+    - name: Update and push image tag
+      shell: bash
+      working-directory: ${{ github.workspace }}/argocd-manifests
+      env:
+        MANIFEST_PATH: ${{ inputs.manifest_path }}
+        HELM_PARAMETER_NAME: ${{ inputs.helm_parameter_name }}
+        PARAMETERS_PATH: ${{ inputs.parameters_path }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        BRANCH: ${{ inputs.branch }}
+      run: |
+        if [[ ! "$IMAGE_TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+          printf 'Invalid container image tag\n' >&2
+          exit 1
+        fi
+
+        parameter_count=$(yq '[.[] | select(.path == strenv(PARAMETERS_PATH)) | .value[] | select(.name == strenv(HELM_PARAMETER_NAME))] | length' "$MANIFEST_PATH")
+        if [[ "$parameter_count" != 1 ]]; then
+          printf 'Expected exactly one matching Helm image tag parameter; found %s\n' "$parameter_count" >&2
+          exit 1
+        fi
+
+        current_tag=$(yq '.[] | select(.path == strenv(PARAMETERS_PATH)) | .value[] | select(.name == strenv(HELM_PARAMETER_NAME)) | .value' "$MANIFEST_PATH")
+        if [[ "$current_tag" == "$IMAGE_TAG" ]]; then
+          printf 'Manifest already uses the requested image tag\n'
+          exit 0
+        fi
+
+        yq -i '(.[] | select(.path == strenv(PARAMETERS_PATH)) | .value[] | select(.name == strenv(HELM_PARAMETER_NAME)) | .value) = strenv(IMAGE_TAG)' "$MANIFEST_PATH"
+        git add -- "$MANIFEST_PATH"
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git commit -m "chore: update $HELM_PARAMETER_NAME to $IMAGE_TAG" -- "$MANIFEST_PATH"
+        git pull --rebase origin "$BRANCH"
+        git push origin "HEAD:$BRANCH"
