@@ -82,10 +82,30 @@ runs:
         path: argocd-manifests
 
     - name: Install yq
-      uses: dcarbone/install-yq-action@v1.1.1
-      with:
-        version: v4.52.2
-        force: 'true'
+      shell: bash
+      env:
+        YQ_VERSION: v4.52.2
+      run: |
+        case "$RUNNER_OS" in
+          Linux) platform=linux ;;
+          macOS) platform=darwin ;;
+          *) printf '::error::Unsupported runner OS: %s\n' "$RUNNER_OS" >&2; exit 1 ;;
+        esac
+        case "$RUNNER_ARCH" in
+          X64) architecture=amd64 ;;
+          ARM64) architecture=arm64 ;;
+          *) printf '::error::Unsupported runner architecture: %s\n' "$RUNNER_ARCH" >&2; exit 1 ;;
+        esac
+
+        install_dir="$RUNNER_TEMP/argocd-yq-$YQ_VERSION"
+        mkdir -p "$install_dir"
+        curl --fail --silent --show-error --location --retry 3 \
+          --connect-timeout 10 --max-time 120 \
+          --output "$install_dir/yq" \
+          "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_${platform}_${architecture}"
+        chmod +x "$install_dir/yq"
+        "$install_dir/yq" --version
+        printf '%s\n' "$install_dir" >> "$GITHUB_PATH"
 
     - name: Update and push image tag
       shell: bash
