@@ -1,8 +1,9 @@
 import csv
 import os
+import subprocess
 import sys
 import glob
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
@@ -44,6 +45,33 @@ def repo_name_from_github_env() -> str:
     if "/" in repo_full:
         return repo_full.split("/", 1)[1]
     return repo_full or ""
+
+
+def changed_chart_dirs() -> Optional[Set[str]]:
+    """
+    Return the chart dirs (as "./charts/<name>") touched since the PR base commit,
+    or None when the base is unknown so that every chart is checked.
+    """
+    base_sha = os.environ.get("DD_GUARD_BASE_SHA", "").strip()
+    if not base_sha:
+        return None
+    try:
+        output = subprocess.run(
+            ["git", "diff", "--name-only", f"{base_sha}...HEAD", "--", "charts/"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError) as e:
+        print(f"⚠️  Unable to diff against {base_sha} ({e}); checking required vars for all charts.")
+        return None
+
+    changed: Set[str] = set()
+    for path in output.splitlines():
+        parts = path.split("/")
+        if len(parts) >= 3 and parts[0] == "charts":
+            changed.add(os.path.join(".", "charts", parts[1]))
+    return changed
 
 
 def find_env_entries(obj: Any) -> List[Dict[str, Any]]:
@@ -147,8 +175,15 @@ def main() -> None:
                 validate_optional_flags(fpath, repo, allowed_optional_flags)
             )
 
-    # Next, validate required flags presence with precedence: prod > base
+    # Next, validate required flags presence with precedence: prod > base.
+    # On pull requests this only applies to charts changed by the PR, so existing
+    # charts are brought into compliance when they are next edited.
+    changed_charts = changed_chart_dirs()
+    if changed_charts is not None:
+        print(f"Checking required Datadog vars for changed charts: {', '.join(sorted(changed_charts)) or '[none]'}")
     for chart_dir, files in sorted(charts_info.items()):
+        if changed_charts is not None and chart_dir not in changed_charts:
+            continue
         prod_path = files.get("prod")
         base_path = files.get("base")
 
