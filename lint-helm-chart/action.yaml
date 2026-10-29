@@ -65,4 +65,6 @@ runs:
       run: python3 "${{ github.action_path }}/allow-actions.py"
     - name: Enforce Datadog flags policy
       shell: bash
+      env:
+        DD_GUARD_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: python3 "${{ github.action_path }}/dd_flags_guard.py"
