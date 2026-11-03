@@ -107,19 +107,8 @@ runs:
 
     - name: Run Gitleaks Scan
       shell: bash
-      env:
-        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        PUSH_BEFORE_SHA: ${{ github.event.before }}
       run: |
-        base="${PR_BASE_SHA:-$PUSH_BEFORE_SHA}"
-        if [[ -n "$base" && ! "$base" =~ ^0+$ ]]; then
-          log_opts="$base..$GITHUB_SHA"
-        else
-          log_opts="-1 $GITHUB_SHA"
-        fi
-        gitleaks detect \
-          --source . \
-          --log-opts="$log_opts" \
+        gitleaks dir . \
           --redact \
           --verbose \
           --exit-code 1
