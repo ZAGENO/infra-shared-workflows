@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "python-annotated-credential"
+description = "Credential assigned to a Python str-annotated variable"
+regex = '''(?i)\b\w*(?:token|secret|password|api_key|apikey)\w*\s*:\s*str\s*=\s*["']([^"'\r\n]{16,})["']'''
+secretGroup = 1
+entropy = 3.5

@@ -107,8 +107,11 @@ runs:
 
     - name: Run Gitleaks Scan
       shell: bash
+      env:
+        GITLEAKS_CONFIG: ${{ github.action_path }}/gitleaks.toml
       run: |
         gitleaks dir . \
+          --config "$GITLEAKS_CONFIG" \
           --redact \
           --verbose \
           --exit-code 1
