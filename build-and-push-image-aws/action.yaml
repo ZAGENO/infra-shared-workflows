@@ -53,6 +53,12 @@ inputs:
   gcp_service_account:
     description: GCP service account (required for dev)
     required: false
+  checkout:
+    description: >-
+      Check out the repository before scanning and building. Set to 'false' when the
+      caller has already checked out (and e.g. git-crypt unlocked) the workspace.
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -87,6 +93,7 @@ runs:
         printf 'is-dev=true\n' >> "$GITHUB_OUTPUT"
 
     - name: Checkout code
+      if: ${{ inputs.checkout == 'true' }}
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -108,8 +115,38 @@ runs:
     - name: Run Gitleaks Scan
       shell: bash
       env:
-        GITLEAKS_CONFIG: ${{ github.action_path }}/gitleaks.toml
+        GITLEAKS_BASE_CONFIG: ${{ github.action_path }}/gitleaks.toml
       run: |
+        set -euo pipefail
+        GITLEAKS_CONFIG="$RUNNER_TEMP/gitleaks.toml"
+        cp "$GITLEAKS_BASE_CONFIG" "$GITLEAKS_CONFIG"
+
+        # Files managed by git-crypt are stored encrypted in git, so they are not leaks.
+        # Callers that unlock git-crypt before this action would otherwise fail the scan
+        # on the decrypted plaintext.
+        if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+          crypt_files=()
+          while IFS= read -r -d '' path && IFS= read -r -d '' _attr && IFS= read -r -d '' value; do
+            if [[ "$value" == git-crypt ]]; then
+              crypt_files+=("$path")
+            fi
+          done < <(git ls-files -z | git check-attr --stdin -z filter)
+          if (( ${#crypt_files[@]} > 0 )); then
+            printf 'Excluding git-crypt managed files from Gitleaks scan:\n'
+            printf '  %s\n' "${crypt_files[@]}"
+            {
+              printf '\n[[allowlists]]\n'
+              printf 'description = "git-crypt managed files (encrypted at rest in git)"\n'
+              printf 'paths = [\n'
+              for f in "${crypt_files[@]}"; do
+                escaped=$(printf '%s' "$f" | sed -e 's/[][\\.^$*+?(){}|]/\\&/g')
+                printf "  '''^(\./)?%s\$''',\n" "$escaped"
+              done
+              printf ']\n'
+            } >> "$GITLEAKS_CONFIG"
+          fi
+        fi
+
         gitleaks dir . \
           --config "$GITLEAKS_CONFIG" \
           --redact \
