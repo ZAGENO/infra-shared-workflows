@@ -133,6 +133,16 @@ must permit ECR authentication and image publishing in the selected account and
 region. Provision the ECR `image_name` repository and the GAR repository first.
 These actions do not provision registries or deploy workloads.
 
+### Checkout and secret scanning (`build-and-push-image-aws`)
+
+The AWS action checks out the repository and runs a Gitleaks `dir` scan before
+building. Callers that prepare the workspace themselves (for example, running
+`git-crypt unlock` after their own checkout) must pass `checkout: 'false'`;
+otherwise the action's checkout re-runs git-crypt filters that are not installed
+on the runner and fails. Files that `.gitattributes` assigns to the `git-crypt`
+filter are excluded from the scan automatically, because they are stored
+encrypted in git.
+
 ### Adoption and migration
 
 **Existing dev callers without secondary settings must be updated** before
