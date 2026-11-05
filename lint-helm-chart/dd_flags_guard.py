@@ -168,19 +168,23 @@ def main() -> None:
         return
 
     all_violations: List[str] = []
+    # On pull requests both checks only apply to charts changed by the PR, so a
+    # chart already out of compliance does not block unrelated PRs; it is brought
+    # into compliance when it is next edited. Without a base SHA every chart is checked.
+    changed_charts = changed_chart_dirs()
+    if changed_charts is not None:
+        print(f"Checking Datadog flags for changed charts: {', '.join(sorted(changed_charts)) or '[none]'}")
+
     # First, validate disallowed optional flags per file
     for chart_dir, files in sorted(charts_info.items()):
+        if changed_charts is not None and chart_dir not in changed_charts:
+            continue
         for fpath in sorted(files.values()):
             all_violations.extend(
                 validate_optional_flags(fpath, repo, allowed_optional_flags)
             )
 
     # Next, validate required flags presence with precedence: prod > base.
-    # On pull requests this only applies to charts changed by the PR, so existing
-    # charts are brought into compliance when they are next edited.
-    changed_charts = changed_chart_dirs()
-    if changed_charts is not None:
-        print(f"Checking required Datadog vars for changed charts: {', '.join(sorted(changed_charts)) or '[none]'}")
     for chart_dir, files in sorted(charts_info.items()):
         if changed_charts is not None and chart_dir not in changed_charts:
             continue
