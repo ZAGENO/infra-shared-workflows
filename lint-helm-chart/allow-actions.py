@@ -50,7 +50,9 @@ ALLOWED = [
     "suo/flake8-github-action@releases/v1",
     "actions/setup-python@v5",
     "actions/cache@v3",
-    "SonarSource/sonarcloud-github-action@master"
+    "SonarSource/sonarcloud-github-action@master",
+    "marocchino/sticky-pull-request-comment@v2",
+    "azure/setup-helm@v4"
 ]
 
 def handle_violations(violations):
